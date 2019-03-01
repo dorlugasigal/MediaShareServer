@@ -1,0 +1,25 @@
+{
+  "name": "mediashare",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/DorLugasi/mediashareserver.git"
+  },
+  "author": "Daniel Saka & Dor Lugasi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/DorLugasi/mediashareserver/issues"
+  },
+  "homepage": "https://gitlab.com/DorLugasi/mediashareserver#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mongodb": "^3.1.13"
+  }
+}
