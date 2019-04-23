@@ -68,7 +68,7 @@ async function deleteMemberFromGroup(req, res, next) {
 }
 async function getGroups(req, res, next) {
     try {
-        await db.getGroups(req.body.groupAdmin, function (ret) {
+        await db.getGroups(req.body.groupAdmin).then((ret)=>{
             res.send(ret);
         });
     }
@@ -79,7 +79,7 @@ async function getGroups(req, res, next) {
 }
 async function getGroupDetails(req, res, next) {
     try {
-        await db.getGroupDetails(req.body.group, function (ret) {
+        await db.getGroupDetails(req.body.group).then((ret)=> {
             res.send(ret);
         });
     }
