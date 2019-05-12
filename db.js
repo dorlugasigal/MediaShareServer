@@ -15,6 +15,22 @@ exports.registerUser = async (user) => {
     return inserted;
 }
 
+exports.getUserUploads = async(user)=>{
+    return new Promise(async (resolve, reject) => {
+        let db = await connection();
+        await db.collection("medias").find(
+            {
+                mediaUploader: user,
+            }
+        ).toArray(function (err, result) {
+            if (err) {
+                reject(null);
+            }
+            console.log(`get medias of ${user}\n`, result);
+            resolve(result);
+        });
+    });
+}
 
 exports.addGroup = async (group) => {
     let db = await connection();
@@ -35,7 +51,6 @@ exports.deleteGroup = async (group) => {
     }, function (err, obj) {
         if (err) throw err;
         console.log(`1 group deleted: ${group.groupName},  by: ${group.groupAdmin}`);
-        return true;
     });
 }
 
