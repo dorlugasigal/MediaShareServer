@@ -14,13 +14,23 @@ exports.registerUser = async (user) => {
     let inserted = await db.collection("users").updateOne({ email: user.email }, { $set: user }, { upsert: true });
     return inserted;
 }
+exports.AddSubject = async (subject) => {
+    let db = await connection();
+    let inserted = await db.collection("subjects").updateOne({
+        name: subject.name,
+        //uploadDate: new Date().toISOString().replace(/T/, '-').replace(/\..+/, '').replace(':', '-'),
+        subjectCreator: subject.subjectCreator,
+        groups: [],
+        media: []
+    }, { $set: subject }, { upsert: true });
+}
 
-exports.getUserUploads = async(user)=>{
+exports.GetUserSubjects = async (user) => {
     return new Promise(async (resolve, reject) => {
         let db = await connection();
-        await db.collection("medias").find(
+        await db.collection("subjects").find(
             {
-                mediaUploader: user,
+                subjectCreator: user,
             }
         ).toArray(function (err, result) {
             if (err) {

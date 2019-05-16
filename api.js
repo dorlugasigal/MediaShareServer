@@ -2,8 +2,23 @@ const express = require('express');
 const db = require("./db");
 const router = express.Router();
 
-const multer = require('multer')
+var fs = require('fs');
+var multer = require('multer');
+const Storage = multer.diskStorage({
+    destination(req, file, callback) {
+        callback(null, '/Medias')
+    },
+    filename(req, file, callback) {
+        callback(null, `${file.fieldname}_${Date.now()}_${file.originalname}.jpg`)
+    },
+})
 
+
+var upload = multer({
+    //  dest: 'uploads/',
+    storage: Storage,
+    limits: { fieldSize: 25 * 1024 * 1024 }
+});
 
 router.post("/registerUser", registerUser);
 router.post("/addGroup", addGroup);
@@ -12,32 +27,15 @@ router.post("/addMemberToGroup", addMemberToGroup);
 router.post("/deleteMemberFromGroup", deleteMemberFromGroup);
 router.post("/getGroups", getGroups);
 router.post("/getGroupDetails", getGroupDetails);
-router.post("/AddPhoto", AddPhoto);
-router.post("/GetUserUploads",getUserUploads);
+router.post("/GetUserSubjects", GetUserSubjects);
+router.post("/AddSubject", AddSubject);
 
-
-
-
-const Storage = multer.diskStorage({
-    destination(req, file, callback) {
-        callback(null, './images')
-    },
-    filename(req, file, callback) {
-        callback(null, `${file.fieldname}_${Date.now()}_${file.originalname}`)
-    },
-})
-
-const upload = multer({ storage: Storage })
-
-
-async function AddPhoto(req, res, next) {
+router.post("/AddPhoto", upload.single('fileData'), (req, res, next) => {
     try {
-        console.log('file', req.files)
-        console.log('body', req.body)
         res.status(200).json({
             message: 'success!',
         })
-        res.send(null);
+        res.send();
         // let inserted = await db.addGroup(req.body.group);
         // let updateGroups= await db.getGroups(req.body.group.groupAdmin)
         // res.send(updateGroups);
@@ -46,7 +44,11 @@ async function AddPhoto(req, res, next) {
         writeError(err);
         res.send(null);
     }
-}
+});
+
+
+
+
 module.exports = router;
 
 async function registerUser(req, res, next) {
@@ -59,10 +61,20 @@ async function registerUser(req, res, next) {
         res.send(null);
     }
 }
-
-async function getUserUploads(req,res,next){
+async function AddSubject(req, res, next) {
     try {
-        let data = await db.getUserUploads(req.body.user);
+        let inserted = await db.AddSubject(req.body.subject);
+        //create a folder
+        res.send(inserted);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
+async function GetUserSubjects(req, res, next) {
+    try {
+        let data = await db.GetUserSubjects(req.body.user);
         res.send(data);
     }
     catch (err) {
