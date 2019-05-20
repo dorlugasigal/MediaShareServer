@@ -30,15 +30,15 @@ router.post("/getGroupDetails", getGroupDetails);
 router.post("/GetUserSubjects", GetUserSubjects);
 router.post("/AddSubject", AddSubject);
 
-router.post("/AddPhoto", upload.single('fileData'), (req, res, next) => {
+router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
     try {
-        res.status(200).json({
-            message: 'success!',
-        })
-        res.send();
-        // let inserted = await db.addGroup(req.body.group);
-        // let updateGroups= await db.getGroups(req.body.group.groupAdmin)
-        // res.send(updateGroups);
+        let data = req;
+        //TODO
+        //Add the photo name and path to the specific subject
+        
+        let result= await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
+        //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
+        res.send(result);
     }
     catch (err) {
         writeError(err);

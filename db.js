@@ -1,5 +1,7 @@
 const mongo = require("mongodb").MongoClient;
 const config = require("./config").config;
+var moment = require('moment');
+var ObjectId = require('mongodb').ObjectID;
 
 const connection = () => new Promise((resolve, reject) => {
     let client = new mongo(config.DB.Uri, { useNewUrlParser: true });
@@ -18,12 +20,29 @@ exports.AddSubject = async (subject) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne({
         name: subject.name,
-        //uploadDate: new Date().toISOString().replace(/T/, '-').replace(/\..+/, '').replace(':', '-'),
         subjectCreator: subject.subjectCreator,
         groups: [],
         media: []
     }, { $set: subject }, { upsert: true });
 }
+
+exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
+    let db = await connection();
+    let inserted = await db.collection("subjects").updateOne(
+        { _id: ObjectId(subjectID) },
+        {
+            $push: {
+                media: {
+                    mediaUploader: mediaUploader,
+                    type: type,
+                    path: path,
+                    uploadDate: moment(Date.now()).format('DD/MM/YYYY HH:mm:ss')
+                }
+            }
+        });
+}
+
+
 
 exports.GetUserSubjects = async (user) => {
     return new Promise(async (resolve, reject) => {
