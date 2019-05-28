@@ -46,7 +46,19 @@ router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
     }
 });
 
-
+router.post("/AddMedia", async (req, res, next) => {
+    try {
+        console.log("AddMedia");
+        let result= await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
+        let updatedSubject= await db.GetUserSubjects(req.body.mediaUploader)
+        //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
+        res.send(updatedSubject);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+});
 
 
 module.exports = router;
@@ -55,6 +67,16 @@ async function registerUser(req, res, next) {
     try {
         let inserted = await db.registerUser(req.body.user);
         res.send(inserted);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
+async function GetUserSubjects(req, res, next) {
+    try {
+        let data = await db.GetUserSubjects(req.body.userID);
+        res.send(data);
     }
     catch (err) {
         writeError(err);
@@ -72,17 +94,6 @@ async function AddSubject(req, res, next) {
         res.send(null);
     }
 }
-async function GetUserSubjects(req, res, next) {
-    try {
-        let data = await db.GetUserSubjects(req.body.user);
-        res.send(data);
-    }
-    catch (err) {
-        writeError(err);
-        res.send(null);
-    }
-}
-
 async function addGroup(req, res, next) {
     try {
         let inserted = await db.addGroup(req.body.group);
@@ -112,6 +123,9 @@ async function deleteGroup(req, res, next) {
 async function addMemberToGroup(req, res, next) {
     try {
         let inserted = await db.addMemberToGroup(req.body.group, req.body.email);
+        if (inserted==null){
+            return next(null);
+        }
         res.send(inserted);
     }
     catch (err) {
@@ -132,9 +146,6 @@ async function deleteMemberFromGroup(req, res, next) {
 }
 async function getGroups(req, res, next) {
     try {
-        console.log(JSON.stringify(req.body))
-
-
         await db.getGroups(req.body.groupAdmin).then((ret) => {
             res.send(ret);
         });

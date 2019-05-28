@@ -10,12 +10,34 @@ const connection = () => new Promise((resolve, reject) => {
         resolve(client.db("MediaShare"))
     })
 })
-
 exports.registerUser = async (user) => {
     let db = await connection();
-    let inserted = await db.collection("users").updateOne({ email: user.email }, { $set: user }, { upsert: true });
-    return inserted;
+    let inserted = await db.collection("users").updateOne({ email: user.email, name: user.name }, { $set: user }, { upsert: true });
+    let userInserted = await db.collection("users").findOne({ email: user.email });
+    // console.log(inserted);
+    // console.log(JSON.stringify(userInserted));
+    return userInserted;
 }
+exports.GetUserSubjects = async (userID) => {
+    return new Promise(async (resolve, reject) => {
+        let db = await connection();
+        await db.collection("subjects").find(
+            {
+                subjectCreator: ObjectId(userID),
+            }
+        ).toArray(function (err, result) {
+            if (err) {
+                reject(null);
+            }
+            console.log(`get medias of ${userID}\n`, result);
+            resolve(result);
+        });
+    });
+}
+
+
+
+
 exports.AddSubject = async (subject) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne({
@@ -33,6 +55,7 @@ exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
         {
             $push: {
                 media: {
+                    id: ObjectId(),
                     mediaUploader: mediaUploader,
                     type: type,
                     path: path,
@@ -40,26 +63,11 @@ exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
                 }
             }
         });
+    return inserted
 }
 
 
 
-exports.GetUserSubjects = async (user) => {
-    return new Promise(async (resolve, reject) => {
-        let db = await connection();
-        await db.collection("subjects").find(
-            {
-                subjectCreator: user,
-            }
-        ).toArray(function (err, result) {
-            if (err) {
-                reject(null);
-            }
-            console.log(`get medias of ${user}\n`, result);
-            resolve(result);
-        });
-    });
-}
 
 exports.addGroup = async (group) => {
     let db = await connection();
@@ -85,25 +93,34 @@ exports.deleteGroup = async (group) => {
 
 exports.addMemberToGroup = async (group, email) => {
     let db = await connection();
-    let inserted = await db.collection("groups").updateOne(
-        {
-            groupName: group.groupName,
-            groupAdmin: group.groupAdmin,
-        },
-        { $push: { members: { email: email } } }
-    )
-    console.log(`member: ${email} inserted to group: ${group.groupName},  by: ${group.groupAdmin}`);
-    return inserted;
+    let userToAdd = await db.collection("users").findOne({ email: email });
+    if (userToAdd) {
+
+        let inserted = await db.collection("groups").updateOne(
+            {
+                _id: ObjectId(group.groupID),
+                groupAdmin: group.groupAdmin,
+            },
+            { $push: { members: email } }
+        )
+        console.log(`member: ${email} inserted to group: ${group.groupName},  by: ${group.groupAdmin}`);
+        return inserted;
+    }
+    else {
+        console.warn(`no such user with email : ${email}`);
+        return null;
+    }
+
 }
 
 exports.deleteMemberFromGroup = async (group, email) => {
     let db = await connection();
     await db.collection("groups").updateOne(
         {
-            groupName: group.groupName,
+            _id: ObjectId(group.groupID),
             groupAdmin: group.groupAdmin,
         },
-        { $pull: { members: { email: email } } }
+        { $pull: { members: email } }
         , function (err, obj) {
             if (err) throw err;
             console.log(`member:  ${email} deleted from: ${group.groupName},  by: ${group.groupAdmin}`);
@@ -132,7 +149,7 @@ exports.getGroupDetails = async (group, callback) => {
         let db = await connection();
         let details = await db.collection("groups").findOne(
             {
-                groupName: group.groupName,
+                _id: ObjectId(group.groupID),
                 groupAdmin: group.groupAdmin,
             }
         );
