@@ -18,19 +18,41 @@ exports.registerUser = async (user) => {
     // console.log(JSON.stringify(userInserted));
     return userInserted;
 }
-exports.GetUserSubjects = async (userID) => {
+
+
+exports.GetUserSubjects = async (userID, email) => {
     return new Promise(async (resolve, reject) => {
+        console.log("get user subjects")
         let db = await connection();
-        await db.collection("subjects").find(
+        await db.collection("subjects").aggregate([
             {
-                subjectCreator: ObjectId(userID),
+                $lookup: {
+                    from: "groups",
+                    let: { group_ids: "$groups" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", "$$group_ids"]
+                                }
+                            }
+                        }
+                    ],
+                    as: "groups"
+                }
             }
-        ).toArray(function (err, result) {
-            if (err) {
-                reject(null);
+            ,
+            {
+                $match: {
+                    $or: [
+                        { 'subjectCreator': ObjectId(userID) },
+                        { 'groups.members': email }
+                    ]
+                }
             }
-            console.log(`get medias of ${userID}\n`, result);
-            resolve(result);
+        ]).toArray(function (err, docs) {
+            console.log("send subject: " + JSON.stringify(docs))
+            resolve(docs);
         });
     });
 }
@@ -42,7 +64,7 @@ exports.AddSubject = async (subject) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne({
         name: subject.name,
-        subjectCreator: subject.subjectCreator,
+        subjectCreator: ObjectId(subject.subjectCreator),
         groups: [],
         media: []
     }, { $set: subject }, { upsert: true });
@@ -65,8 +87,6 @@ exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
         });
     return inserted
 }
-
-
 
 
 exports.addGroup = async (group) => {
@@ -110,7 +130,6 @@ exports.addMemberToGroup = async (group, email) => {
         console.warn(`no such user with email : ${email}`);
         return null;
     }
-
 }
 
 exports.deleteMemberFromGroup = async (group, email) => {

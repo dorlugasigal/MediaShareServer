@@ -75,7 +75,7 @@ async function registerUser(req, res, next) {
 }
 async function GetUserSubjects(req, res, next) {
     try {
-        let data = await db.GetUserSubjects(req.body.userID);
+        let data = await db.GetUserSubjects(req.body.userID,req.body.email);
         res.send(data);
     }
     catch (err) {
