@@ -35,8 +35,8 @@ router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
         let data = req;
         //TODO
         //Add the photo name and path to the specific subject
-        
-        let result= await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
+
+        let result = await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
         //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
         res.send(result);
     }
@@ -49,8 +49,9 @@ router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
 router.post("/AddMedia", async (req, res, next) => {
     try {
         console.log("AddMedia");
-        let result= await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
-        let updatedSubject= await db.GetUserSubjects(req.body.mediaUploader)
+        const {mediaUploader,type,path,subject,base64} = req.body;
+        let result = await db.AddMedia(mediaUploader.userID, type, path, subject, base64);
+        let updatedSubject = await db.GetUserSubjects(mediaUploader.userID, mediaUploader.email)
         //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
         res.send(updatedSubject);
     }
@@ -75,7 +76,7 @@ async function registerUser(req, res, next) {
 }
 async function GetUserSubjects(req, res, next) {
     try {
-        let data = await db.GetUserSubjects(req.body.userID,req.body.email);
+        let data = await db.GetUserSubjects(req.body.userID, req.body.email);
         res.send(data);
     }
     catch (err) {
@@ -123,7 +124,7 @@ async function deleteGroup(req, res, next) {
 async function addMemberToGroup(req, res, next) {
     try {
         let inserted = await db.addMemberToGroup(req.body.group, req.body.email);
-        if (inserted==null){
+        if (inserted == null) {
             return next(null);
         }
         res.send(inserted);

@@ -10,15 +10,13 @@ const connection = () => new Promise((resolve, reject) => {
         resolve(client.db("MediaShare"))
     })
 })
+
 exports.registerUser = async (user) => {
     let db = await connection();
     let inserted = await db.collection("users").updateOne({ email: user.email, name: user.name }, { $set: user }, { upsert: true });
     let userInserted = await db.collection("users").findOne({ email: user.email });
-    // console.log(inserted);
-    // console.log(JSON.stringify(userInserted));
     return userInserted;
 }
-
 
 exports.GetUserSubjects = async (userID, email) => {
     return new Promise(async (resolve, reject) => {
@@ -51,14 +49,10 @@ exports.GetUserSubjects = async (userID, email) => {
                 }
             }
         ]).toArray(function (err, docs) {
-            console.log("send subject: " + JSON.stringify(docs))
             resolve(docs);
         });
     });
 }
-
-
-
 
 exports.AddSubject = async (subject) => {
     let db = await connection();
@@ -70,7 +64,7 @@ exports.AddSubject = async (subject) => {
     }, { $set: subject }, { upsert: true });
 }
 
-exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
+exports.AddMedia = async (mediaUploader, type, path, subjectID, base64 = null) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne(
         { _id: ObjectId(subjectID) },
@@ -78,9 +72,10 @@ exports.AddMedia = async (mediaUploader, type, path, subjectID) => {
             $push: {
                 media: {
                     id: ObjectId(),
-                    mediaUploader: mediaUploader,
+                    mediaUploader: ObjectId(mediaUploader),
                     type: type,
                     path: path,
+                    base64: base64,
                     uploadDate: moment(Date.now()).format('DD/MM/YYYY HH:mm:ss')
                 }
             }
@@ -144,7 +139,8 @@ exports.deleteMemberFromGroup = async (group, email) => {
             if (err) throw err;
             console.log(`member:  ${email} deleted from: ${group.groupName},  by: ${group.groupAdmin}`);
             return true;
-        })
+        }
+    )
 }
 
 exports.getGroups = async (groupAdmin) => {
