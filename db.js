@@ -20,7 +20,6 @@ exports.registerUser = async (user) => {
 
 exports.GetUserSubjects = async (userID, email) => {
     return new Promise(async (resolve, reject) => {
-        console.log("get user subjects")
         let db = await connection();
         await db.collection("subjects").aggregate([
             {
@@ -56,12 +55,21 @@ exports.GetUserSubjects = async (userID, email) => {
 
 exports.AddSubject = async (subject) => {
     let db = await connection();
-    let inserted = await db.collection("subjects").updateOne({
+    let inserted = await db.collection("subjects").insertOne({
         name: subject.name,
         subjectCreator: ObjectId(subject.subjectCreator),
         groups: [],
         media: []
-    }, { $set: subject }, { upsert: true });
+    });
+    return inserted;
+}
+exports.GetSpecificSubjects = async (subject) => {
+    let db = await connection();
+    let select = await db.collection("subjects").findOne({
+        name: subject.name,
+        subjectCreator: ObjectId(subject.subjectCreator),
+    });
+    return select;
 }
 
 exports.AddMedia = async (mediaUploader, type, path, subjectID, base64 = null) => {

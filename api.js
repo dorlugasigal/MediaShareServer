@@ -49,7 +49,7 @@ router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
 router.post("/AddMedia", async (req, res, next) => {
     try {
         console.log("AddMedia");
-        const {mediaUploader,type,path,subject,base64} = req.body;
+        const { mediaUploader, type, path, subject, base64 } = req.body;
         let result = await db.AddMedia(mediaUploader.userID, type, path, subject, base64);
         let updatedSubject = await db.GetUserSubjects(mediaUploader.userID, mediaUploader.email)
         //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
@@ -84,11 +84,16 @@ async function GetUserSubjects(req, res, next) {
         res.send(null);
     }
 }
-async function AddSubject(req, res, next) {
+async function AddSubject (req, res, next) {
     try {
-        let inserted = await db.AddSubject(req.body.subject);
-        //create a folder
-        res.send(inserted);
+        let existSubjectID = await db.GetSpecificSubjects(req.body.subject);
+        if (existSubjectID) {
+            res.send(existSubjectID);
+        }
+        else {
+            let inserted = await db.AddSubject(req.body.subject);
+            res.send(inserted.ops[0]);
+        }
     }
     catch (err) {
         writeError(err);
