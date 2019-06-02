@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require("./db");
 const router = express.Router();
+var nodemailer = require('nodemailer');
 
 var fs = require('fs');
 var multer = require('multer');
@@ -12,7 +13,6 @@ const Storage = multer.diskStorage({
         callback(null, `${file.fieldname}_${Date.now()}_${file.originalname}.jpg`)
     },
 })
-
 
 var upload = multer({
     //  dest: 'uploads/',
@@ -29,7 +29,17 @@ router.post("/getGroups", getGroups);
 router.post("/getGroupDetails", getGroupDetails);
 router.post("/GetUserSubjects", GetUserSubjects);
 router.post("/AddSubject", AddSubject);
-
+router.post("/SendEmail", async (req,res,next)=>{
+    try {
+        console.log('send email')
+        let data = await db.SendEmail(req.body.email);
+        res.send(data);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+});
 router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
     try {
         let data = req;
@@ -84,6 +94,8 @@ async function GetUserSubjects(req, res, next) {
         res.send(null);
     }
 }
+
+
 async function AddSubject (req, res, next) {
     try {
         let existSubjectID = await db.GetSpecificSubjects(req.body.subject);
