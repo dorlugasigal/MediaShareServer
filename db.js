@@ -37,9 +37,23 @@ exports.GetUserSubjects = async (userID, email) => {
                         }
                     ],
                     as: "groups"
+                },
+                $lookup:
+                {
+                    from: "users",
+                    let: { userID: "$media" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ["$_id", "$$userID"]
+                                }
+                            }
+                        }
+                    ],
+                    as: "user"
                 }
-            }
-            ,
+            },
             {
                 $match: {
                     $or: [
@@ -49,6 +63,7 @@ exports.GetUserSubjects = async (userID, email) => {
                 }
             }
         ]).toArray(function (err, docs) {
+            console.log(docs)
             resolve(docs);
         });
     });
@@ -72,31 +87,31 @@ exports.GetSpecificSubjects = async (subject) => {
     });
     return select;
 }
-exports.SendEmail= async(email)=>{
+exports.SendEmail = async (email) => {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: 'mediasharemanager@gmail.com',
-          pass: 'Fin@lPro10'
-        }, 
-      });
-      
-      var mailOptions = {
+            user: 'mediasharemanager@gmail.com',
+            pass: 'Fin@lPro10'
+        },
+    });
+
+    var mailOptions = {
         from: 'mediasharemanager@gmail.com',
         to: email,
         subject: 'Join To MediaShare',
         text: 'Find us On Application Store'
-      };
-      
-      transporter.sendMail(mailOptions, function(error, info){
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-          console.log(error);
-          return error;
+            console.log(error);
+            return error;
         } else {
-          console.log('Email sent: ' + info.response);
-          return info.response;
+            console.log('Email sent: ' + info.response);
+            return info.response;
         }
-      });
+    });
 }
 exports.AddMedia = async (mediaUploader, type, path, subjectID, base64 = null) => {
     let db = await connection();
