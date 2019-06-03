@@ -29,7 +29,11 @@ router.post("/getGroups", getGroups);
 router.post("/getGroupDetails", getGroupDetails);
 router.post("/GetUserSubjects", GetUserSubjects);
 router.post("/AddSubject", AddSubject);
-router.post("/SendEmail", async (req,res,next)=>{
+router.post("/GetUserName", GetUserName)
+router.post("/deleteMediaFromSubject", deleteMediaFromSubject);
+router.post("/DeleteSubject", DeleteSubject);
+
+router.post("/SendEmail", async (req, res, next) => {
     try {
         console.log('send email')
         let data = await db.SendEmail(req.body.email);
@@ -55,6 +59,19 @@ router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
         res.send(null);
     }
 });
+
+async function DeleteSubject(req, res, next) {
+    try {
+        console.log("DeleteSubject");
+        const { subjectID, subjectCreator } = req.body;
+        let result = await db.DeleteSubject(subjectID, subjectCreator);
+        res.send(result);
+    }
+    catch{
+        writeError(err);
+        res.send(null);
+    }
+}
 
 router.post("/AddMedia", async (req, res, next) => {
     try {
@@ -95,8 +112,19 @@ async function GetUserSubjects(req, res, next) {
     }
 }
 
+async function GetUserName(req, res, next) {
+    try {
+        console.log('get user name')
+        let obj = await db.GetUserName(req.body.id);
+        res.send(obj)
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
 
-async function AddSubject (req, res, next) {
+async function AddSubject(req, res, next) {
     try {
         let existSubjectID = await db.GetSpecificSubjects(req.body.subject);
         if (existSubjectID) {
@@ -145,6 +173,16 @@ async function addMemberToGroup(req, res, next) {
             return next(null);
         }
         res.send(inserted);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
+async function deleteMediaFromSubject(req, res, next) {
+    try {
+        let ret = await db.deleteMediaFromSubject(req.body.subjectID, req.body.subjectCreator, req.body.id, req.body.mediaUploader);
+        res.send(ret);
     }
     catch (err) {
         writeError(err);

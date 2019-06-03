@@ -37,21 +37,6 @@ exports.GetUserSubjects = async (userID, email) => {
                         }
                     ],
                     as: "groups"
-                },
-                $lookup:
-                {
-                    from: "users",
-                    let: { userID: "$media" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $in: ["$_id", "$$userID"]
-                                }
-                            }
-                        }
-                    ],
-                    as: "user"
                 }
             },
             {
@@ -113,6 +98,11 @@ exports.SendEmail = async (email) => {
         }
     });
 }
+exports.GetUserName = async (id) => {
+    let db = await connection();
+    let User = await db.collection("users").findOne({ _id: ObjectId(id) });
+    return (User)
+}
 exports.AddMedia = async (mediaUploader, type, path, subjectID, base64 = null) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne(
@@ -144,6 +134,37 @@ exports.addGroup = async (group) => {
     return inserted;
 }
 
+exports.DeleteSubject = async (subjectID, subjectCreator) => {
+    let db = await connection();
+    let up = await db.collection("subjects").deleteOne({
+        _id: ObjectId(subjectID),
+        subjectCreator: ObjectId(subjectCreator)
+    });
+}
+exports.deleteMediaFromSubject = async (subjectID, subjectCreator, id, mediaUploader) => {
+    let db = await connection();
+
+    let up = await db.collection("subjects").updateOne(
+        {
+            _id: ObjectId(subjectID),
+            subjectCreator: ObjectId(subjectCreator)
+        },
+        {
+            $pull: {
+                media: {
+                    id: ObjectId(id),
+                    mediaUploader: ObjectId(mediaUploader)
+                }
+            }
+        }, function (err, obj) {
+            if (err) {
+                throw err;
+            }
+            return obj;
+        }
+    )
+    return up;
+}
 exports.deleteGroup = async (group) => {
     let db = await connection();
     await db.collection("groups").deleteOne({

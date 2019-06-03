@@ -3,9 +3,8 @@ const express = require('express'),
     app = express(),
     api = require('./api');
 
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({limit: '10mb', extended: true}));
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 
 const PORT = process.env.PORT || 1337;
 app.listen(PORT, () => {
