@@ -32,27 +32,13 @@ router.post("/AddSubject", AddSubject);
 router.post("/GetUserName", GetUserName)
 router.post("/deleteMediaFromSubject", deleteMediaFromSubject);
 router.post("/DeleteSubject", DeleteSubject);
-
+router.post("/AddGroupToSubject", AddGroupToSubject)
+router.post("/RemoveGroupFromSubject", RemoveGroupFromSubject)
 router.post("/SendEmail", async (req, res, next) => {
     try {
         console.log('send email')
         let data = await db.SendEmail(req.body.email);
         res.send(data);
-    }
-    catch (err) {
-        writeError(err);
-        res.send(null);
-    }
-});
-router.post("/AddPhoto", upload.single('fileData'), async (req, res, next) => {
-    try {
-        let data = req;
-        //TODO
-        //Add the photo name and path to the specific subject
-
-        let result = await db.AddMedia(req.body.mediaUploader, req.body.type, req.body.path, req.body.subjectID);
-        //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
-        res.send(result);
     }
     catch (err) {
         writeError(err);
@@ -78,9 +64,7 @@ router.post("/AddMedia", async (req, res, next) => {
         console.log("AddMedia");
         const { mediaUploader, type, path, subject, base64 } = req.body;
         let result = await db.AddMedia(mediaUploader.userID, type, path, subject, base64);
-        let updatedSubject = await db.GetUserSubjects(mediaUploader.userID, mediaUploader.email)
-        //let subjects = await db.GetUserSubjects(req.body.mediaUploader)
-        res.send(updatedSubject);
+        res.send(result);
     }
     catch (err) {
         writeError(err);
@@ -111,7 +95,26 @@ async function GetUserSubjects(req, res, next) {
         res.send(null);
     }
 }
-
+async function AddGroupToSubject(req, res, next) {
+    try {
+        let data = await db.AddGroupToSubject(req.body.subjectID, req.body.groupID);
+        res.send(data);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
+async function RemoveGroupFromSubject(req, res, next) {
+    try {
+        let data = await db.RemoveGroupFromSubject(req.body.subjectID, req.body.groupID);
+        res.send(data);
+    }
+    catch (err) {
+        writeError(err);
+        res.send(null);
+    }
+}
 async function GetUserName(req, res, next) {
     try {
         console.log('get user name')

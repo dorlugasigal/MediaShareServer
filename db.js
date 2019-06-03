@@ -38,12 +38,13 @@ exports.GetUserSubjects = async (userID, email) => {
                     ],
                     as: "groups"
                 }
-            },
+            }
+            ,
             {
                 $match: {
                     $or: [
-                        { 'subjectCreator': ObjectId(userID) },
-                        { 'groups.members': email }
+                        { 'groups.members': email },
+                        { 'subjectCreator': ObjectId(userID) }
                     ]
                 }
             }
@@ -103,6 +104,34 @@ exports.GetUserName = async (id) => {
     let User = await db.collection("users").findOne({ _id: ObjectId(id) });
     return (User)
 }
+
+exports.AddGroupToSubject = async (subjectID, groupID) => {
+    let db = await connection();
+    var ret = await db.collection("subjects").updateOne(
+        { _id: ObjectId(subjectID) },
+        {
+            $push: {
+                groups: ObjectId(groupID),
+            }
+        });
+        return ret;      
+}
+exports.RemoveGroupFromSubject = async (subjectID, groupID) => {
+    let db = await connection();
+    await db.collection("subjects").updateOne(
+        { _id: ObjectId(subjectID) },
+        {
+            $pull: {
+                groups: ObjectId(groupID),
+            }
+        }, function (err, obj) {
+            if (err) {
+                throw err;
+            }
+            return obj;
+        })
+}
+
 exports.AddMedia = async (mediaUploader, type, path, subjectID, base64 = null) => {
     let db = await connection();
     let inserted = await db.collection("subjects").updateOne(
